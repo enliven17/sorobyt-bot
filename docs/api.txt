@@ -1,0 +1,14 @@
+API Access
+For the hackathon, please use our latest staging version:
+
+API:
+
+[https://soroswap-api-staging-436722401508.us-central1.run.app/](https://soroswap-api-staging-436722401508.us-central1.run.app/)
+
+You can use this API key: sk_e2acb3e0b5248f286023ef7ce9a5cde7e087c12579ae85fb3e9e318aeb11c6ce
+
+📫Postman Collection:
+
+the collection .json's are in the docs folder
+
+‼️Important: Use the Staging Postman collection for the hackathon.

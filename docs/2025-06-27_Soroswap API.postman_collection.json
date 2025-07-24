@@ -1,0 +1,723 @@
+{
+	"info": {
+		"_postman_id": "7ed8d8dc-a58b-4bd9-abc7-267620c7b41d",
+		"name": "Soroswap API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42435524"
+	},
+	"item": [
+		{
+			"name": "App",
+			"item": [
+				{
+					"name": "Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/health",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Testnet Tokens",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/tokens",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"tokens"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Random Testnet Tokens",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/random_tokens",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"random_tokens"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Contracts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/mainnet/router",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"mainnet",
+								"router"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "usertest",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "example@gmail.com",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}/register",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}\n"
+						},
+						"url": {
+							"raw": "{{host}}/login",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{refresh_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "{{host}}/refresh",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Price",
+			"item": [
+				{
+					"name": "price",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/price?network=mainnet&asset=CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA&referenceCurrency=USD",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"price"
+							],
+							"query": [
+								{
+									"key": "network",
+									"value": "mainnet"
+								},
+								{
+									"key": "asset",
+									"value": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA"
+								},
+								{
+									"key": "referenceCurrency",
+									"value": "USD"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Quote",
+			"item": [
+				{
+					"name": "Protocols",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/protocols?network=mainnet",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"protocols"
+							],
+							"query": [
+								{
+									"key": "network",
+									"value": "mainnet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Quote",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // MANDATORY\n    \"assetIn\": \"CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75\", // USDC\n    \"assetOut\": \"CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV\", // EURC\n    \"amount\": \"100000000\", // 100.0000000 USDC\n    \"tradeType\": \"EXACT_IN\",\n    \"protocols\": [\"soroswap\", \"aqua\", \"phoenix\"], \n\n    // OPTIONAL\n    \"parts\": 100, // Optional. The highest the better but may be slower\n    \"slippageTolerance\": 50, // Optional\n    \"maxHops\": 2, // Optional\n    \"assetList\": [\"soroswap\"], // Optional. Check asset list endpoint to see all available.\n    \"feeBps\": 50 // Optional. This fee will be splitted 60% to the referralID and 40% to soroswap protocol. We can achieve a commercial aggreement.\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/quote",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"quote"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Build",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // QUOTE. COPY AND PASTE THE RESULT FROM THE \"quote\" endpoint\n    \"quote\": {\n    \"assetIn\": \"CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75\",\n    \"assetOut\": \"CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV\",\n    \"priceImpact\": {\n        \"numerator\": \"330\",\n        \"denominator\": \"1000000\"\n    },\n    \"trade\": {\n        \"amountIn\": \"99500000\",\n        \"amountOutMin\": \"84399635\",\n        \"distribution\": [\n            {\n                \"protocol_id\": \"soroswap\",\n                \"path\": [\n                    \"CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75\",\n                    \"CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA\",\n                    \"CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV\"\n                ],\n                \"parts\": 85,\n                \"is_exact_in\": true\n            },\n            {\n                \"protocol_id\": \"aqua\",\n                \"path\": [\n                    \"CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75\",\n                    \"CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV\"\n                ],\n                \"parts\": 15,\n                \"is_exact_in\": true,\n                \"poolHashes\": [\n                    \"msepzeI6wq2hEQXuqkLkPC6oMyygqo9B9Y1xYCdNcY4=\"\n                ]\n            }\n        ],\n        \"expectedAmountOut\": \"84823753\"\n    },\n    \"tradeType\": \"EXACT_IN\",\n    \"feeBps\": 50,\n    \"feeAmount\": \"500000\"\n},\n    \"referralId\": \"CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA\", // Use a Smart Contract in order to avoid Trustline errors\n    \"from\": \"GA3CQIS2URXWHWXLM34IKLTQFOLCMC4UGWG3SPRGT67PEFDGV2FFT5SO\", \n    \"to\": \"GA3CQIS2URXWHWXLM34IKLTQFOLCMC4UGWG3SPRGT67PEFDGV2FFT5SO\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/quote/build",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"quote",
+								"build"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Send Transaction",
+			"item": [
+				{
+					"name": "Send",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"xdr\": \"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\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/send?network=mainnet",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"send"
+							],
+							"query": [
+								{
+									"key": "network",
+									"value": "mainnet"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Liquidity",
+			"item": [
+				{
+					"name": "Add",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "assetA",
+									"value": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+									"type": "text"
+								},
+								{
+									"key": "assetB",
+									"value": "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+									"type": "text"
+								},
+								{
+									"key": "amountA",
+									"value": "10000000",
+									"type": "text"
+								},
+								{
+									"key": "amountB",
+									"value": "2598025",
+									"type": "text"
+								},
+								{
+									"key": "to",
+									"value": "GB6LEFQDRNJE55Y5X7PDGHSXGK3CA23LWBKVMLBC7C4HISL74YH4QA4N",
+									"type": "text"
+								},
+								{
+									"key": "slippageTolerance",
+									"value": "100",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}/liquidity/add?network=mainnet",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"liquidity",
+								"add"
+							],
+							"query": [
+								{
+									"key": "network",
+									"value": "mainnet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "assetA",
+									"value": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+									"type": "text"
+								},
+								{
+									"key": "assetB",
+									"value": "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+									"type": "text"
+								},
+								{
+									"key": "liquidity",
+									"value": "18305475",
+									"type": "text"
+								},
+								{
+									"key": "amountA",
+									"value": "38506067",
+									"type": "text"
+								},
+								{
+									"key": "amountB",
+									"value": "10003972",
+									"type": "text"
+								},
+								{
+									"key": "to",
+									"value": "GB6LEFQDRNJE55Y5X7PDGHSXGK3CA23LWBKVMLBC7C4HISL74YH4QA4N",
+									"type": "text"
+								},
+								{
+									"key": "slippageTolerance",
+									"value": "100",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}/liquidity/remove?network=mainnet",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"liquidity",
+								"remove"
+							],
+							"query": [
+								{
+									"key": "network",
+									"value": "mainnet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Positions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/liquidity/positions/:address?network=mainnet",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"liquidity",
+								"positions",
+								":address"
+							],
+							"query": [
+								{
+									"key": "network",
+									"value": "mainnet"
+								}
+							],
+							"variable": [
+								{
+									"key": "address",
+									"value": "GB6LEFQDRNJE55Y5X7PDGHSXGK3CA23LWBKVMLBC7C4HISL74YH4QA4N"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pools",
+			"item": [
+				{
+					"name": "All pairs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/pairs?network=mainnet&protocol=phoenix&assetList=soroswap",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"pairs"
+							],
+							"query": [
+								{
+									"key": "network",
+									"value": "mainnet"
+								},
+								{
+									"key": "protocol",
+									"value": "phoenix"
+								},
+								{
+									"key": "assetList",
+									"value": "soroswap"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetPair",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/pairs?network=mainnet&protocol=phoenix&assetList=soroswap",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"pairs"
+							],
+							"query": [
+								{
+									"key": "network",
+									"value": "mainnet"
+								},
+								{
+									"key": "protocol",
+									"value": "phoenix"
+								},
+								{
+									"key": "assetList",
+									"value": "soroswap"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AssetList",
+			"item": [
+				{
+					"name": "Soroswap asset list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/asset-list?name=soroswap",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"asset-list"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "soroswap"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Stellar Expert asset list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/asset-list?name=soroswap",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"asset-list"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "soroswap"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List not found",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/asset-list?name=somelist",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"asset-list"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "somelist"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "All asset lists",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/asset-list",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"asset-list"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "soroswap",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"pm.sendRequest({",
+					"    url: `${pm.environment.get(\"host\")}/login`,",
+					"    method: \"POST\",",
+					"    header: {",
+					"        \"Content-Type\": \"application/json\"",
+					"    },",
+					"    body: {",
+					"        mode: \"raw\",",
+					"        raw: JSON.stringify({",
+					"            email: pm.environment.get(\"admin_email\"),",
+					"            password: pm.environment.get(\"admin_password\")",
+					"        })",
+					"    }",
+					"}, function (err, res) {",
+					"    if (!err) {",
+					"        let access_token = res.json().access_token;",
+					"        let refresh_token = res.json().refresh_token;",
+					"        pm.environment.set(\"jwt_token\", access_token);",
+					"        pm.environment.set(\"refresh_token\", refresh_token);",
+					"    }",
+					"});"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
