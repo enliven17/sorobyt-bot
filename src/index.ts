@@ -96,14 +96,17 @@ bot.command('price', async (ctx) => {
   if (args.length === 0) {
     return ctx.reply('Usage: /price <asset>\nExample: /price XLM');
   }
-  const asset = args[0];
+  let asset = args[0].toUpperCase();
+  asset = assetSymbolMap[asset] || asset;
   try {
-    const priceData = await getPrice({ network: 'mainnet', asset });
+    const priceData = await getPrice({ network: 'mainnet', asset, referenceCurrency: 'USD' });
     if (!priceData || !priceData.price) {
       return ctx.reply('Price not found for this asset.');
     }
-    ctx.reply(`💸 Price for ${asset}: ${priceData.price} USD`);
-  } catch (err) {
+    ctx.reply(`💸 Price for ${args[0].toUpperCase()}: ${priceData.price} USD`);
+  } catch (err: any) {
+    console.error('PRICE ERROR:', err?.response?.data || err);
+    console.log('PRICE QUERY:', { asset });
     ctx.reply('Error fetching price.');
   }
 });
