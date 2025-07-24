@@ -7,6 +7,10 @@ import { getAssetList } from './api/soroswap';
 import { getProtocols } from './api/soroswap';
 import { getHealth } from './api/soroswap';
 import { getSwaps } from './api/soroswap';
+import axios from 'axios';
+import { fetchRecentSwapsFromDune } from './api/dune';
+import { fetchPoolReservesFromDune } from './api/dune';
+import { fetchPoolsFromDune } from './api/dune';
 
 if (!TELEGRAM_BOT_TOKEN) {
   throw new Error('Telegram bot token is missing. Please set TELEGRAM_BOT_TOKEN in your environment variables.');
@@ -18,33 +22,26 @@ const alertUsers = new Set<number>();
 
 bot.start((ctx) => ctx.reply(
   `👋 Welcome to Sorobyt!\n\n` +
-  `This bot provides real-time DeFi alerts and Soroswap analytics on Stellar.\n\n` +
-  `You can:\n` +
-  `• Get live asset prices\n` +
-  `• Get swap quotes\n` +
-  `• Track pool liquidity\n` +
-  `• List all Soroswap assets\n` +
-  `• See supported protocols\n` +
-  `• Check API health\n` +
-  `• \uD83D\uDD14 Get XLM swap alerts with /alerts on\n\n` +
-  `Available commands:\n` +
-  `  /price <asset> — Get the current price of an asset\n` +
-  `  /quote <assetIn> <assetOut> <amount> — Get a swap quote\n` +
-  `  /liquidity <tokenA> <tokenB> — Show pool liquidity\n` +
-  `  /assets — List all Soroswap assets\n` +
+  `Get real-time DeFi swap alerts and asset info for Stellar.\n\n` +
+  `Commands:\n` +
+  `  /price XLM — Get the current price of XLM\n` +
+  `  /recent — Show last 20 Soroswap swaps\n` +
+  `  /reserves — Show latest pool reserves\n` +
+  `  /pools — Show latest pools\n` +
   `  /protocols — List supported protocols\n` +
   `  /health — Show Soroswap API health status\n` +
-  `  /alerts on|off — Enable or disable XLM swap alerts`
+  `  /alerts on|off — Enable or disable all swap alerts` +
+  `\n\n🔔 Use /alerts on to get notified for every new swap!`
 ));
 
 bot.command('alerts', (ctx) => {
   const args = ctx.message.text.split(' ').slice(1);
   if (args[0] === 'on') {
     alertUsers.add(ctx.from.id);
-    ctx.reply('🔔 XLM swap alerts enabled! You will receive notifications for XLM swaps.');
+    ctx.reply('🔔 Soroswap swap alerts enabled! You will receive notifications for all new swaps.');
   } else if (args[0] === 'off') {
     alertUsers.delete(ctx.from.id);
-    ctx.reply('🔕 XLM swap alerts disabled.');
+    ctx.reply('🔕 All swap alerts disabled.');
   } else {
     ctx.reply('Usage: /alerts on|off');
   }
@@ -91,114 +88,35 @@ bot.command('health', async (ctx) => {
   }
 });
 
-bot.command('price', async (ctx) => {
-  const args = ctx.message.text.split(' ').slice(1);
-  if (args.length === 0) {
-    return ctx.reply('Usage: /price <asset>\nExample: /price XLM');
-  }
-  let asset = args[0].toUpperCase();
-  asset = assetSymbolMap[asset] || asset;
-  try {
-    const priceData = await getPrice({ network: 'mainnet', asset, referenceCurrency: 'USD' });
-    if (!priceData || !priceData.price) {
-      return ctx.reply('Price not found for this asset.');
-    }
-    ctx.reply(`💸 Price for ${args[0].toUpperCase()}: ${priceData.price} USD`);
-  } catch (err: any) {
-    console.error('PRICE ERROR:', err?.response?.data || err);
-    console.log('PRICE QUERY:', { asset });
-    ctx.reply('Error fetching price.');
-  }
-});
-
-bot.command('quote', async (ctx) => {
-  const args = ctx.message.text.split(' ').slice(1);
-  if (args.length < 3) {
-    return ctx.reply('Usage: /quote <assetIn> <assetOut> <amount>\nExample: /quote XLM USDC 100000000');
-  }
-  const [assetIn, assetOut, amount] = args;
-  try {
-    const body = {
-      assetIn,
-      assetOut,
-      amount,
-      tradeType: 'EXACT_IN',
-      protocols: ['soroswap', 'phoenix', 'aqua'],
-    };
-    const quote = await getQuote(body, 'mainnet');
-    if (!quote || !quote.trade || !quote.trade.expectedAmountOut) {
-      return ctx.reply('No quote found for this swap.');
-    }
-    ctx.reply(
-      `🔄 Swap Quote\n` +
-      `From: ${assetIn}\nTo: ${assetOut}\nAmount: ${amount}\nExpected out: ${quote.trade.expectedAmountOut}`
-    );
-  } catch (err) {
-    ctx.reply('Error fetching quote.');
-  }
-});
-
 let assetSymbolMap: Record<string, string> = {};
 async function updateAssetSymbolMap() {
   try {
     const assets = await getAssetList({ name: 'soroswap' });
+    console.log('ASSET LIST RESPONSE:', assets);
     assetSymbolMap = {};
-    for (const a of assets) {
+    const assetList = assets.assets || [];
+    for (const a of assetList) {
       const symbol = (a.symbol || a.code || a.asset_code)?.toUpperCase();
       const address = a.address || a.issuer || a.asset_issuer;
       if (symbol && address) {
         assetSymbolMap[symbol] = address;
       }
-      // XLM için özel durum
       if (symbol === 'XLM') {
-        assetSymbolMap['XLM'] = 'native';
+        assetSymbolMap['XLM'] = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
       }
     }
-  } catch {}
+  } catch (e) {
+    console.error('ASSET LIST ERROR:', e);
+  }
 }
-updateAssetSymbolMap();
-setInterval(updateAssetSymbolMap, 10 * 60 * 1000); // 10 dakikada bir güncelle
-
-bot.command('liquidity', async (ctx) => {
-  const args = ctx.message.text.split(' ').slice(1);
-  if (args.length < 2) {
-    return ctx.reply('Usage: /liquidity <tokenA> <tokenB>\nExample: /liquidity XLM USDC');
-  }
-  let [tokenA, tokenB] = args;
-  // Sembol ise adrese çevir
-  tokenA = assetSymbolMap[tokenA.toUpperCase()] || tokenA;
-  tokenB = assetSymbolMap[tokenB.toUpperCase()] || tokenB;
-  try {
-    const params = { network: 'mainnet', protocol: 'soroswap' };
-    const pools = await getPools(params);
-    const pool = pools.find((p: any) =>
-      (p.tokenA === tokenA && p.tokenB === tokenB) || (p.tokenA === tokenB && p.tokenB === tokenA)
-    );
-    if (!pool) {
-      return ctx.reply('No pool found for these tokens.');
-    }
-    ctx.reply(
-      `💧 Pool Liquidity\n` +
-      `Pool: ${pool.tokenA} / ${pool.tokenB}\n` +
-      `Liquidity: ${pool.liquidity}`
-    );
-  } catch (err) {
-    ctx.reply('Error fetching liquidity.');
-  }
+updateAssetSymbolMap().then(() => {
+  console.log('ASSET SYMBOL MAP (on start):', assetSymbolMap);
 });
-
-bot.command('assets', async (ctx) => {
-  try {
-    const assets = await getAssetList({ name: 'soroswap' });
-    if (!assets || !Array.isArray(assets) || assets.length === 0) {
-      return ctx.reply('No assets found.');
-    }
-    const assetList = assets.map((a: any) => `${a.symbol || a.code || a.asset_code}`).join(', ');
-    ctx.reply(`📋 Soroswap assets:\n${assetList}`);
-  } catch (err) {
-    ctx.reply('Error fetching asset list.');
-  }
-});
+setInterval(() => {
+  updateAssetSymbolMap().then(() => {
+    console.log('ASSET SYMBOL MAP (interval):', assetSymbolMap);
+  });
+}, 10 * 60 * 1000); // 10 dakikada bir güncelle
 
 bot.command('protocols', async (ctx) => {
   try {
@@ -213,25 +131,96 @@ bot.command('protocols', async (ctx) => {
   }
 });
 
+bot.command('swaps', async (ctx) => {
+  try {
+    const swaps = await getSwaps({ network: 'mainnet', limit: 10 });
+    if (!Array.isArray(swaps) || swaps.length === 0) {
+      return ctx.reply('No recent swaps found.');
+    }
+    const swapList = swaps.map((swap: any, i: number) =>
+      `${i + 1}. ${swap.assetIn} → ${swap.assetOut}\nAmount: ${swap.amount}\nTx: ${swap.txn || swap.tx || swap.tx_hash || 'N/A'}`
+    ).join('\n\n');
+    ctx.reply(`Last 10 Soroswap swaps:\n\n${swapList}`);
+  } catch (err) {
+    ctx.reply('Error fetching recent swaps.');
+  }
+});
+
+bot.command('recent', async (ctx) => {
+  try {
+    const swaps = await fetchRecentSwapsFromDune(20);
+    if (!Array.isArray(swaps) || swaps.length === 0) {
+      return ctx.reply('No recent swaps found.');
+    }
+    const swapList = swaps.map((swap: any, i: number) =>
+      `${i + 1}. ${swap.token_0 || swap.token_in || swap.assetIn} → ${swap.token_1 || swap.token_out || swap.assetOut}\nAmount: ${swap.amount_0 || swap.amount_in || swap.amount}\nTx: ${swap.tx_hash || swap.txn || swap.tx || 'N/A'}\nTime: ${swap.closed_at || swap.block_time || swap.time || ''}`
+    ).join('\n\n');
+    ctx.reply(`Last 20 Soroswap swaps (via Dune):\n\n${swapList}`);
+  } catch (err) {
+    ctx.reply('Error fetching recent swaps from Dune.');
+  }
+});
+
+// assetSymbolMap'i tersine çeviren yardımcı fonksiyon
+function getSymbolByAddress(address: string): string {
+  for (const [symbol, addr] of Object.entries(assetSymbolMap)) {
+    if (addr === address) return symbol;
+  }
+  return address?.slice(0, 6) + '...' || '-'; // mapping yoksa kısaltılmış adres
+}
+
+bot.command('reserves', async (ctx) => {
+  try {
+    const reserves = await fetchPoolReservesFromDune(10);
+    if (!Array.isArray(reserves) || reserves.length === 0) {
+      return ctx.reply('No pool reserves found.');
+    }
+    let msg = '💧 *Latest Pool Reserves (via Dune)*\n\n';
+    msg += '`Pool      | Token0 | Reserve0    | Token1 | Reserve1    | Updated`\n';
+    msg += '`----------|--------|------------|--------|------------|---------------------`\n';
+    reserves.forEach((r: any) => {
+      const token0 = getSymbolByAddress(r.token_0);
+      const token1 = getSymbolByAddress(r.token_1);
+      msg += `[0m${(r.pool_id || '-').toString().padEnd(9)}| ${token0.padEnd(6)}| ${(r.reserve_0 || '-').toString().padEnd(11)}| ${token1.padEnd(6)}| ${(r.reserve_1 || '-').toString().padEnd(11)}| ${(r.updated_at || r.closed_at || r.time || '-').toString().slice(0,19)}\n`;
+    });
+    msg += '\n_Example: XLM/USDC pool reserves shown as XLM | USDC | ..._';
+    ctx.replyWithMarkdownV2('```\n' + msg + '\n```');
+  } catch (err) {
+    console.error('DUNE RESERVES ERROR:', err);
+    ctx.reply('Error fetching pool reserves from Dune.');
+  }
+});
+
+bot.command('pools', async (ctx) => {
+  try {
+    const pools = await fetchPoolsFromDune(10);
+    if (!Array.isArray(pools) || pools.length === 0) {
+      return ctx.reply('No pools found.');
+    }
+    const poolList = pools.map((p: any, i: number) =>
+      `${i + 1}. Pool: ${p.pair || p.pool || p.pool_id || '-'}\nToken0: ${p.token_0 || '-'}\nToken1: ${p.token_1 || '-'}\nCreated: ${p.created_at || p.time || ''}`
+    ).join('\n\n');
+    ctx.reply(`Latest pools (via Dune):\n\n${poolList}`);
+  } catch (err) {
+    console.error('DUNE POOLS ERROR:', err);
+    ctx.reply('Error fetching pools from Dune.');
+  }
+});
+
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM')); 
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
 
 // Swap alert logic
 let lastSwapId: string | null = null;
-async function checkXlmSwapsAndAlert() {
+async function checkSwapsAndAlert() {
   try {
-    // Swapları çek (örnek endpoint, gerekirse güncelle)
     const swaps = await getSwaps({ network: 'mainnet', limit: 5 });
     if (!Array.isArray(swaps) || swaps.length === 0) return;
-    // Sadece yeni swaplar için kontrol
     for (const swap of swaps) {
       if (lastSwapId && swap.id === lastSwapId) break;
-      // XLM asset kodu: "native" veya "XLM" olabilir, endpoint'e göre kontrol et
-      if (swap.assetIn === 'native' || swap.assetOut === 'native' || swap.assetIn === 'XLM' || swap.assetOut === 'XLM') {
-        for (const userId of alertUsers) {
-          bot.telegram.sendMessage(userId, `⚡️ New XLM Swap!\nFrom: ${swap.assetIn} To: ${swap.assetOut}\nAmount: ${swap.amount}`);
-        }
+      for (const userId of alertUsers) {
+        bot.telegram.sendMessage(userId, `⚡️ New Swap!\nFrom: ${swap.assetIn} To: ${swap.assetOut}\nAmount: ${swap.amount}`);
       }
     }
     lastSwapId = swaps[0]?.id || lastSwapId;
@@ -239,4 +228,19 @@ async function checkXlmSwapsAndAlert() {
     // Sessizce geç
   }
 }
-setInterval(checkXlmSwapsAndAlert, 30 * 1000); // Her 30 saniyede bir kontrol et 
+setInterval(checkSwapsAndAlert, 30 * 1000); // Her 30 saniyede bir kontrol et
+
+bot.command('price', async (ctx) => {
+  const args = ctx.message.text.split(' ').slice(1);
+  if (args.length === 0 || args[0].toUpperCase() !== 'XLM') {
+    return ctx.reply('Usage: /price XLM');
+  }
+  try {
+    const res = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd');
+    const price = res.data?.stellar?.usd;
+    if (!price) return ctx.reply('XLM price not found.');
+    ctx.reply(`💸 XLM/USD: $${price}`);
+  } catch (err) {
+    ctx.reply('Error fetching XLM price.');
+  }
+}); 
