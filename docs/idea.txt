@@ -1,1 +1,0 @@
-Smart alerts: Create real-time alert systems based on market signals, asset movements, or protocol updates. Think about Telegram bot.
